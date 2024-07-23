@@ -22,5 +22,15 @@ pacman -Qttdq | pacman -Rns -
 
 #pacman -Qtdq | pacman -Rns -
 
-5. 
+5. Make preperations to reinstall the base system, reinstall the base install script. Start from where we define the root password (e.g: echo root:password | chpasswd) also comment out the roki user and the permissions
+
+6. Chaneg the permissions for the file before excecuting
+
+chmod +x the_script+file.sh
+
+7. Excecute the file
+
+run ./the_script+file.Switch
+
+
 
