@@ -42,6 +42,7 @@ btrfs subvolume create /mnt/@
 btrfs subvolume create /mnt/@home
 btrfs subvolume create /mnt/@var_log
 btrfs subvolume create /mnt/@snapshots
+btrfs subvolume create /mnt/@swap
 umount /mnt
 
 7. Mount the subvolumes:
@@ -51,31 +52,64 @@ umount /mnt
 
 
 mount -o compress=zstd,noatime,space_cache=v2,discard=async,ssd,subvol=@ /dev/mapper/cryptroot /mnt
-mkdir -p /mnt/{home,boot,.snapshots,var/log}
+mkdir -p /mnt/{home,boot,.snapshots,var/log,btrfs}
 mount -o compress=zstd,noatime,space_cache=v2,discard=async,ssd,subvol=@home /dev/mapper/cryptroot /mnt/home
 mount -o compress=zstd,noatime,space_cache=v2,discard=async,ssd,subvol=@snapshots /dev/mapper/cryptroot /mnt/.snapshots
 mount -o compress=zstd,noatime,space_cache=v2,discard=async,ssd,subvol=@var_log /dev/mapper/cryptroot /mnt/var/log
+mount -o noatime,nodiratime,compress=zstd,space_cache=v2,ssd,subvolid=5 /dev/mapper/cryptroot  /mnt/btrfs
 mount /dev/nvme0n1p4 /mnt/boot
 
 8. Swapfile
-mkdir /mnt/swap
-chattr +C /mnt/swap/swapfile
-mount -o noatime,ssd,defaults,subvol=__active/swap /dev/mapper/cryptroot /mnt/swap/swapfile 0 0
-mount -o none,subvol=swap /dev/mapper/cryptroot /mnt/swap/swapfile 0 0
-btrfs property set /mnt/swap/swapfile compression none
-dd if=/dev/zero of=/mnt/swap/swapfile bs=1M count=8192
-chmod 600 /mnt/swap/swapfile
-mkswap /mnt/swap/swapfile
-swapon /swap/swapfile
+#codyhou
+#cd /mnt/swap
+#chattr +C /mnt/swap
+#dd if=/dev/zero of=./swapfile bs=1M count=4096 status=progress
+#chmod 0600 ./swapfile
+# mkswap -U clear ./swapfile
+# swapon ./swapfile
+#sync
+
+
+cd /mnt/btrfs/@swap
+truncate -s 0 ./swapfile
+chattr +C ./swapfile
+btrfs property set ./swapfile compression none
+dd if=/dev/zero of=./swapfile bs=1M count=8192 status=progress
+# btrfs filesystem mkswapfile --size 2G swapfile
+chmod 600 ./swapfile
+mkswap ./swapfile
+swapon ./swapfile
+# swapon swapfile
+cd -
 sync
 
+
+
+
+#nerdstuff
+# cd /mnt/btrfs/@swap
+# btrfs subvolume create /mnt/@swap
+# btrfs filesystem mkswapfile --size 8g --uuid clear /swap/swapfile
+# swapon /swap/swapfile
+#/etc/fstab
+#/swap/swapfile none swap defaults 0 0
+#/swap/swapfile        none        swap        defaults      0 0
+
+
+#Manual
+# btrfs subvolume create /swap
+#Tip: Consider creating the subvolume directly below the top-level subvolume, e.g. @swap. Then, make sure the subvolume is mounted to /swap (or any other accessible location).
+# btrfs filesystem mkswapfile --size 4g --uuid clear /swap/swapfile
+# swapon /swap/swapfile
+#/etc/fstab
+#/swap/swapfile none swap defaults 0 0
 
 9. Install the base packages into /mnt or run the archinstall script
 
 #For archinstall script choose the pre-mounted partition setup
 pacman -Syy
 
-pacstrap /mnt base base-devel linux-lts linux-lts-headers git linux-firmware nano btrfs-progs efibootmgr bootctl netctl openssh intel-ucode wpa_supplicant git xdg-user-dirs xdg-utils gvfs ntfs-3g mtools dosfstools --noconfirm 
+pacstrap /mnt base base-devel linux-lts linux-lts-headers linux linux-headers git linux-firmware nano btrfs-progs efibootmgr bootctl netctl openssh intel-ucode wpa_supplicant git xdg-user-dirs xdg-utils gvfs ntfs-3g mtools dosfstools --noconfirm 
 #(or amd-ucode))
 
 

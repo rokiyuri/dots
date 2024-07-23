@@ -18,7 +18,7 @@ yay -S zramd
 
 systemctl enable --now zramd.service
 #/etc/default/zramd
-
+###After configured the swap file, follow the zram page. Make sure zram has the higher swap priority (e.g. pri=100). 
 
 #Install the ifplugd package and start/enable the netctl-ifplugd@interface.service systemd unit. 
 #Start/enable netctl-auto@interface.service systemd unit. netctl profiles will be started/stopped automatically as you move from the range of one network into the range of another network (roaming).
