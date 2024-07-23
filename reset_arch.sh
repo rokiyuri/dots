@@ -32,5 +32,6 @@ chmod +x the_script+file.sh
 
 run ./the_script+file.Switch
 
+8. reboot
 
 
